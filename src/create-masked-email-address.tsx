@@ -5,9 +5,14 @@ import { useEffect, useState } from "react";
 interface Preferences {
   api_token: string;
 }
+interface Domain {
+  display: string;
+  banned?: boolean;
+  active?: boolean;
+}
 
 interface State {
-  domains?: Array<string>;
+  domains?: Domain[];
   error?: Error;
 }
 
