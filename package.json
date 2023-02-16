@@ -2,25 +2,35 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "improvmx",
   "title": "ImprovMX",
-  "description": "Help Interact with ImprovMX with the help of Raycast",
-  "icon": "command-icon.png",
-  "author": "MuhaddiM",
+  "description": "Interact with ImprovMX with the help of Raycast",
+  "icon": "improvmx.png",
+  "author": "MuhaddiMu",
   "owner": "ImprovMX",
   "categories": [
     "Communication"
   ],
   "license": "MIT",
+  "preferences": [
+    {
+      "name": "api_token",
+      "title": "ImprovMX API Token",
+      "description": "Please enter your ImprovMX API Token to be able to access the ImprovMX raycast extension",
+      "type": "password",
+      "required": true
+    }
+  ],
   "commands": [
     {
       "name": "create-masked-email-address",
       "title": "Create Masked Email Address",
-      "subtitle": "Create a masked email address for a domain in ImprovMX",
-      "description": "",
+      "subtitle": "ImprovMX",
+      "description": "Generate a new masked email address",
       "mode": "view"
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.47.3"
+    "@raycast/api": "^1.47.3",
+    "node-fetch": "^3.3.0"
   },
   "devDependencies": {
     "@types/node": "18.8.3",
