@@ -9,6 +9,7 @@ interface Domain {
   display: string;
   banned?: boolean;
   active?: boolean;
+  domains?: string[];
 }
 
 interface State {
@@ -36,10 +37,6 @@ export default function Command() {
         if (!apiResponse.ok) {
           throw new Error(`Fetch failed with status ${apiResponse.status}: ${apiResponse.statusText}`);
         }
-
-
-      
-
         setState({ domains: await apiResponse.json() });
       } catch (error) {
         setState({
@@ -50,6 +47,10 @@ export default function Command() {
 
     getDomains();
   }, []);
+
+  if(state.domains !== undefined) {
+    console.log(state.domains)
+  }
 
 return (
     <List isLoading={state.domains === undefined} searchBarPlaceholder="Filter domains..." isShowingDetail>
@@ -80,7 +81,7 @@ return (
                     fetch(`https://api.improvmx.com/v3/domains/${domain.display}/aliases/`, {
                       method: "POST",
                       headers: {
-                        Authorization: "Basic ${auth}",
+                        Authorization: "Basic " + auth,
                       },
                       body: form,
                     })
