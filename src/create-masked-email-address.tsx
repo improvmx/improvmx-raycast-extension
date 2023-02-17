@@ -39,7 +39,7 @@ export default function Command() {
         }
 
 
-        setState({ domains: await apiResponse.json() });
+        setState({ domains: await apiResponse.json() as Domain[] });
       } catch (error) {
         setState({
           error: error instanceof Error ? error : new Error("Something went wrong"),
