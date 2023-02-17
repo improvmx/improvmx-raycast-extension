@@ -21,12 +21,14 @@ export default function Command() {
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
 
+  const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
+
   useEffect(() => {
     async function getDomains() {
       try {
         const apiResponse = await fetch("https://api.improvmx.com/v3/domains?=", {
           headers: {
-            Authorization: "Basic YXBpOnNrXzI1YTQ3MmQwZDMxNzRlNmM4NjNiZWJmZGQ1YjRjMDZk",
+            Authorization: "Basic " + auth,
             "Content-Type": "application/x-www-form-urlencoded",
           },
         });
@@ -78,26 +80,21 @@ return (
                     fetch(`https://api.improvmx.com/v3/domains/${domain.display}/aliases/`, {
                       method: "POST",
                       headers: {
-                        Authorization: "Basic YXBpOnNrXzI1YTQ3MmQwZDMxNzRlNmM4NjNiZWJmZGQ1YjRjMDZk",
+                        Authorization: "Basic ${auth}",
                       },
                       body: form,
                     })
                       .then((response) => response.json())
                       .then(async (data) => {
-                        // await showToast({
-                        //   style: Toast.Style.Success,
-                        //   title: "Masked email copied to clipboard " + data.alias.alias,
-                        // });)
-                        await showToast({
-                          style: Toast.Style.Failure,
-                          title: "Alias Limit Reached. Please upgrade your account"
-                        })
-                        // await Clipboard.copy(data.alias.alias + "@" + domain.display);
-                        // await showHUD("Masked email created successfully " + data.alias.alias + "@" + domain.domain + " and copied to clipboard");
+                        await Clipboard.copy(data.alias.alias + "@" + domain.display);
+                        await showHUD("Masked email created successfully " + data.alias.alias + "@" + domain.domain + " and copied to clipboard");
 
                       })
-                      .catch((error) => {
-                        console.error("Error:", error);
+                      .catch(async (error) => {
+                        await showToast({
+                          style: Toast.Style.Failure,
+                          title: error.message,
+                        })
                       });
                   }}
                 />
