@@ -88,7 +88,7 @@ return (
                       body: form,
                     })
                       .then((response) => response.json())
-                      .then(async (data : unknown) => {
+                      .then(async (data : any ) => {
                         await Clipboard.copy(data.alias.alias + "@" + domain.display);
                         await showHUD("Masked email created successfully " + data.alias.alias + "@" + domain.domain + " and copied to clipboard");
 
