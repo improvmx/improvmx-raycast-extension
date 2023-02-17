@@ -37,6 +37,8 @@ export default function Command() {
         if (!apiResponse.ok) {
           throw new Error(`Fetch failed with status ${apiResponse.status}: ${apiResponse.statusText}`);
         }
+
+
         setState({ domains: await apiResponse.json() });
       } catch (error) {
         setState({
@@ -86,7 +88,7 @@ return (
                       body: form,
                     })
                       .then((response) => response.json())
-                      .then(async (data) => {
+                      .then(async (data : unknown) => {
                         await Clipboard.copy(data.alias.alias + "@" + domain.display);
                         await showHUD("Masked email created successfully " + data.alias.alias + "@" + domain.domain + " and copied to clipboard");
 
