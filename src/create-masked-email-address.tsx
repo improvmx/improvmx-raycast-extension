@@ -39,7 +39,8 @@ export default function Command() {
         }
 
 
-        setState({ domains: await apiResponse.json() as Domain[] });
+        const domains = await apiResponse.json() as Domain[];
+        setState({ domains: domains });
       } catch (error) {
         setState({
           error: error instanceof Error ? error : new Error("Something went wrong"),
@@ -57,7 +58,7 @@ export default function Command() {
 return (
     <List isLoading={state.domains === undefined} searchBarPlaceholder="Filter domains..." isShowingDetail>
       <List.Section title="Domains">
-        {state.domains?.domains?.map((domain) => (
+        {state.domains?.map((domain: Domain) => (
           <List.Item
             key={domain.display}
             title={domain.display}
