@@ -26,6 +26,27 @@
       "subtitle": "ImprovMX",
       "description": "Generate a new masked email address",
       "mode": "view"
+    },
+    {
+      "name": "add-domain",
+      "title": "Add Domain",
+      "subtitle": "ImprovMX",
+      "description": "Add a new domain to your ImprovMX account",
+      "mode": "view"
+    },
+    {
+      "name": "create-alias",
+      "title": "Create Alias",
+      "subtitle": "ImprovMX",
+      "description": "Create a new alias for a domain",
+      "mode": "view"
+    },
+    {
+      "name": "create-smtp-credentials",
+      "title": "Create SMTP Credentials",
+      "subtitle": "ImprovMX",
+      "description": "Create SMTP credentials for a domain",
+      "mode": "view"
     }
   ],
   "dependencies": {
