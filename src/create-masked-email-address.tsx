@@ -9,7 +9,6 @@ interface Domain {
   display: string;
   banned?: boolean;
   active?: boolean;
-  domains?: string[];
 }
 
 interface State {
@@ -27,7 +26,7 @@ export default function Command() {
   useEffect(() => {
     async function getDomains() {
       try {
-        const apiResponse = await fetch("https://api.improvmx.com/v3/domains?=", {
+        const apiResponse = await fetch(API_URL + "domains?=", {
           headers: {
             Authorization: "Basic " + auth,
             "Content-Type": "application/x-www-form-urlencoded",
@@ -38,9 +37,11 @@ export default function Command() {
           throw new Error(`Fetch failed with status ${apiResponse.status}: ${apiResponse.statusText}`);
         }
 
+        const response = await apiResponse.json() as unknown;
+        const domains = response as { domains: Array<Domain> };
 
-        const domains = await apiResponse.json() as Domain[];
-        setState({ domains: domains });
+        setState({ domains: domains.domains });
+
       } catch (error) {
         setState({
           error: error instanceof Error ? error : new Error("Something went wrong"),
@@ -50,10 +51,6 @@ export default function Command() {
 
     getDomains();
   }, []);
-
-  if(state.domains !== undefined) {
-    console.log(state.domains)
-  }
 
 return (
     <List isLoading={state.domains === undefined} searchBarPlaceholder="Filter domains..." isShowingDetail>
@@ -81,7 +78,7 @@ return (
                     );
                     form.append("forward", "muhaddisshah@gmail.com");
 
-                    fetch(`https://api.improvmx.com/v3/domains/${domain.display}/aliases/`, {
+                    fetch(API_URL + `domains/${domain.display}/aliases/`, {
                       method: "POST",
                       headers: {
                         Authorization: "Basic " + auth,
