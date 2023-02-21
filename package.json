@@ -14,7 +14,7 @@
     {
       "name": "api_token",
       "title": "ImprovMX API Token",
-      "description": "Please enter your ImprovMX API Token to be able to access the ImprovMX raycast extension",
+      "description": "Before you can start using this command, you'll need to add your API key. You can find this at https://app.improvmx.com/api",
       "type": "password",
       "required": true
     }
