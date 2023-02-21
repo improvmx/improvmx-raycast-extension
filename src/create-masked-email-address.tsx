@@ -1,7 +1,7 @@
-import { showHUD, Icon, openExtensionPreferences, Color, showToast, Detail, Toast, getPreferenceValues, List, ActionPanel, Clipboard, Action } from "@raycast/api";
+import { showHUD, openExtensionPreferences, showToast, Detail, Toast, getPreferenceValues, List, ActionPanel, Clipboard, Action } from "@raycast/api";
 import fetch, { FormData } from "node-fetch";
 import { useEffect, useState } from "react";
-import { fetchAccont } from "./utils";
+import { fetchAccont, domainIcon } from "./utils";
 
 interface Preferences {
   api_token: string;
@@ -18,8 +18,7 @@ interface State {
   forwardingEmail?: string;
 }
 
-
-export default function Command() {
+export default function CreateMaskedEmail() {
 
   const [state, setState] = useState<State>({
     domains: undefined,
@@ -30,9 +29,6 @@ export default function Command() {
     API_URL = "https://api.improvmx.com/v3/";
 
   const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
-
- 
-  
 
   useEffect(() => {
     async function getDomains() {
@@ -85,16 +81,6 @@ export default function Command() {
     if (state.error) {
       await showToast(Toast.Style.Failure, state.error);
     }
-  };
-
-
-
-  const domainIcon = (domain: Domain) => {
-      if (domain.banned || domain.active == false) {
-        return { source: Icon.ExclamationMark, tintColor: Color.Red };
-      } else {
-        return { source: Icon.CheckCircle, tintColor: Color.Green };
-      }
   };
 
   showError();

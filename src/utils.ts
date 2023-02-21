@@ -1,5 +1,12 @@
-import { LocalStorage } from "@raycast/api";
+import { Color, Icon, LocalStorage } from "@raycast/api";
 import fetch from "node-fetch";
+
+interface Domain {
+  display: string;
+  banned?: boolean;
+  active?: boolean;
+}
+
 
 const fetchAccountAPI = async (auth: string, API_URL: string ) => {
   try {
@@ -43,4 +50,11 @@ const fetchAccont = async (auth: string, API_URL: string ) => {
     }
   };
 
-  export { fetchAccont }
+  const domainIcon = (domain: Domain) => {
+    if (domain.banned || domain.active == false) {
+      return { source: Icon.ExclamationMark, tintColor: Color.Red };
+    } else {
+      return { source: Icon.CheckCircle, tintColor: Color.Green };
+    }
+};
+  export { fetchAccont, domainIcon }
