@@ -29,7 +29,7 @@ interface State {
   forwardingEmail?: string;
   aliasError?: string;
   domainError?: string;
-  isLoading: false,
+  isLoading: false;
   forwardingEmailError: string;
 }
 
@@ -38,7 +38,7 @@ export default function createAlias() {
       domains: undefined,
       error: "",
       forwardingEmail: "",
-      aliasError: "", 
+      aliasError: "",
       domainError: "",
       forwardingEmailError: "",
       isLoading: false,
@@ -100,14 +100,13 @@ export default function createAlias() {
     }
   };
 
-  const handleSumbit = async (values : any)  => {
-     const { domain, alias } = values;
+  const handleSumbit = async (values: any) => {
+    const { domain, alias } = values;
     const aliasError = alias.length === 0 ? "Alias is required" : "";
     const domainError = domain.length === 0 ? "Domain is required" : "";
     const forwardingEmailError = state.forwardingEmail?.length === 0 ? "Forwarding Email is required" : "";
 
-
-    if (aliasError || domainError || forwardingEmailError)  {
+    if (aliasError || domainError || forwardingEmailError) {
       setState((prevState) => {
         return { ...prevState, aliasError, domainError, forwardingEmailError };
       });
@@ -115,17 +114,16 @@ export default function createAlias() {
       return;
     }
 
-    setState((prevState : any) => {
+    setState((prevState: any) => {
       return { ...prevState, isLoading: true };
     });
 
     const formData = {
-      "forward": state.forwardingEmail,
-      "alias": alias,
-    }
+      forward: state.forwardingEmail,
+      alias: alias,
+    };
 
     try {
-
       const apiResponse = await fetch(API_URL + "domains/" + domain + "/aliases", {
         method: "POST",
         headers: {
@@ -135,19 +133,17 @@ export default function createAlias() {
         body: JSON.stringify(formData),
       });
 
-      
       if (await !apiResponse.ok) {
-
         if (apiResponse.status === 401) {
           setState((prevState) => {
             return { ...prevState, error: "Invalid API Token", isLoading: false };
           });
 
           await showToast(Toast.Style.Failure, "Error", "Invalid API Token");
-         
+
           return;
         }
-        
+
         const response = (await apiResponse.json()) as unknown;
         const errors = response as { errors: { alias: Array<string> } };
         const error = errors.errors.alias[0];
@@ -163,12 +159,10 @@ export default function createAlias() {
       return;
     }
 
-    await showToast(Toast.Style.Success, "Success", "Alias created successfully " +  alias + "@" + domain);
+    await showToast(Toast.Style.Success, "Success", "Alias created successfully " + alias + "@" + domain);
     await Clipboard.copy(alias + "@" + domain);
     await showHUD("Alias copied to clipboard " + alias + "@" + domain);
-    
-    
-  }
+  };
 
   showError();
 
@@ -182,17 +176,15 @@ export default function createAlias() {
       }
     />
   ) : (
-    <Form isLoading={state.domains === undefined || state.isLoading}
+    <Form
+      isLoading={state.domains === undefined || state.isLoading}
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Create Alias" onSubmit={(values) => handleSumbit(values)} />
         </ActionPanel>
       }
-
     >
-      <Form.Dropdown id="domain" title="Domain" placeholder="Select a domain"
-        error={state.domainError}
-      >
+      <Form.Dropdown id="domain" title="Domain" placeholder="Select a domain" error={state.domainError}>
         {state.domains
           ?.filter((domain) => !domain.banned && domain.active)
           .map((domain) => (
@@ -200,12 +192,7 @@ export default function createAlias() {
           ))}
       </Form.Dropdown>
 
-      <Form.TextField
-        id="alias"
-        title="Alias"
-        placeholder="Enter an alias"
-        error={state.aliasError}
-      />
+      <Form.TextField id="alias" title="Alias" placeholder="Enter an alias" error={state.aliasError} />
       <Form.TextField
         id="forwardingEmail"
         title="Forwarding Email"
