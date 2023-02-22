@@ -1,10 +1,23 @@
-import { showHUD, showToast, Toast, getPreferenceValues, List, ActionPanel, Clipboard, Action } from "@raycast/api";
-import fetch, { FormData } from "node-fetch";
+import {
+  openExtensionPreferences,
+  showToast,
+  Detail,
+  Toast,
+  getPreferenceValues,
+  ActionPanel,
+  Clipboard,
+  Action,
+  Form,
+} from "@raycast/api";
+
+import fetch from "node-fetch";
 import { useEffect, useState } from "react";
+import { generatePassword } from "./utils";
 
 interface Preferences {
   api_token: string;
 }
+
 interface Domain {
   display: string;
   banned?: boolean;
@@ -13,11 +26,30 @@ interface Domain {
 
 interface State {
   domains?: Domain[];
-  error?: Error;
+  error?: string;
+  isLoading: boolean;
+  username: string;
+  password: string;
+  onlyFromAlias: boolean;
+  domainError: string;
+  onlyFromAliasError: string;
+  passwordError: string;
+  usernameError: string;
 }
 
-export default function Command() {
-  const [state, setState] = useState<State>({}),
+export default function createSMTPCredentials() {
+  const [state, setState] = useState<State>({
+      domains: undefined,
+      error: "",
+      isLoading: false,
+      username: "",
+      password: generatePassword(),
+      onlyFromAlias: true,
+      domainError: "",
+      onlyFromAliasError: "",
+      passwordError: "",
+      usernameError: "",
+    }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
 
@@ -34,77 +66,218 @@ export default function Command() {
         });
 
         if (!apiResponse.ok) {
-          throw new Error(`Fetch failed with status ${apiResponse.status}: ${apiResponse.statusText}`);
+          if (apiResponse.status === 401) {
+            setState((prevState) => {
+              return { ...prevState, error: "Invalid API Token" };
+            });
+
+            return;
+          }
         }
 
-        const response = await apiResponse.json() as unknown;
+        const response = (await apiResponse.json()) as unknown;
         const domains = response as { domains: Array<Domain> };
 
-        setState({ domains: domains.domains });
-
-      } catch (error) {
-        setState({
-          error: error instanceof Error ? error : new Error("Something went wrong"),
+        setState((prevState) => {
+          return { ...prevState, domains: domains.domains, error: "" };
         });
+      } catch (error) {
+        setState((prevState) => {
+          return { ...prevState, error: "Failed to fetch domains. Please try again later." };
+        });
+        return;
       }
     }
 
     getDomains();
   }, []);
 
-return (
-    <List isLoading={state.domains === undefined} searchBarPlaceholder="Filter domains..." isShowingDetail>
-      <List.Section title="Domains">
-        {state.domains?.map((domain: Domain) => (
-          <List.Item
-            key={domain.display}
-            title={domain.display}
-            icon={{ value: domain.banned || domain.active == false ? "🔴" : "🟢", source: "emoji" }}
-            actions={
-              <ActionPanel>
-                <Action
-                  title="Create a Masked Email Address"
-                  onAction={() => {
+  const showError = async () => {
+    if (state.error) {
+      await showToast(Toast.Style.Failure, state.error);
+    }
+  };
 
-                    if (domain.banned || domain.active == false) {
-                      showToast(Toast.Style.Failure, "Domain is banned or inactive");
-                      return;
-                    }
+  const handleSumbit = async (values: any) => {
+    resetErrors();
 
-                    const form = new FormData();
-                    form.append(
-                      "alias",
-                      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-                    );
-                    form.append("forward", "muhaddisshah@gmail.com");
+    setState((prevState) => {
+      return {
+        ...prevState,
+        isLoading: true,
+      };
+    });
 
-                    fetch(API_URL + `domains/${domain.display}/aliases/`, {
-                      method: "POST",
-                      headers: {
-                        Authorization: "Basic " + auth,
-                      },
-                      body: form,
-                    })
-                      .then((response) => response.json())
-                      .then(async (data : any ) => {
-                        await Clipboard.copy(data.alias.alias + "@" + domain.display);
-                        await showHUD("Masked email created successfully " + data.alias.alias + "@" + domain.display + " and copied to clipboard");
+    const { domain, username, password, onlyFromAlias } = values;
 
-                      })
-                      .catch(async (error) => {
-                        await showToast({
-                          style: Toast.Style.Failure,
-                          title: error.message,
-                        })
-                      });
-                  }}
-                />
-              </ActionPanel>
-            }
-            detail={<List.Item.Detail markdown={"Create masked email using **" + domain.display + "**"} />}
-          />
-        ))}
-      </List.Section>
-    </List>
+    const domainError = domain === undefined ? "Please select a domain" : "";
+    const usernameError = username === "" ? "Please enter a username" : "";
+    const passwordError = password?.length < 8 ? "Password must be at least 8 characters" : "";
+    const onlyFromAliasError = onlyFromAlias === undefined ? "Please select an option" : "";
+
+    if (domainError || usernameError || passwordError || onlyFromAliasError) {
+      setState((prevState) => {
+        return {
+          ...prevState,
+          domainError,
+          usernameError,
+          passwordError,
+          onlyFromAliasError,
+          isLoading: false,
+        };
+      });
+
+      return;
+    }
+
+    const formData = {
+      username: username,
+      password: password,
+      is_limited: onlyFromAlias,
+    };
+
+    try {
+      const apiResponse = await fetch(API_URL + "domains/" + domain + "/credentials", {
+        method: "POST",
+        headers: {
+          Authorization: "Basic " + auth,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!apiResponse.ok) {
+        if (apiResponse.status === 401) {
+          setState((prevState) => {
+            return { ...prevState, error: "Invalid API Token" };
+          });
+          return;
+        }
+
+        const response = (await apiResponse.json()) as { error?: string; errors?: Record<string, string[]> };
+
+        if (response.error) {
+          setState((prevState) => {
+            return { ...prevState, error: response.error, isLoading: false };
+          });
+        } else if (response.errors?.username) {
+          setState((prevState) => {
+            return { ...prevState, usernameError: response.errors?.username?.[0] ?? "", isLoading: false };
+          });
+        } else if (response.errors?.password) {
+          setState((prevState) => {
+            return { ...prevState, passwordError: response.errors?.password?.[0] ?? "", isLoading: false };
+          });
+        } else if (response.errors?.is_limited) {
+          setState((prevState) => {
+            return { ...prevState, onlyFromAliasError: response.errors?.is_limited?.[0] ?? "", isLoading: false };
+          });
+        } else {
+          setState((prevState) => {
+            return {
+              ...prevState,
+              error: "Failed to create SMTP credentials. Please try again later.",
+              isLoading: false,
+            };
+          });
+        }
+
+        return;
+      }
+
+      await Clipboard.copy(password);
+      await showToast(Toast.Style.Success, "SMTP Credentials created successfully and password copied to clipboard");
+
+      setState((prevState) => {
+        return {
+          ...prevState,
+          isLoading: false,
+        };
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const resetErrors = () => {
+    setState((prevState) => {
+      return {
+        ...prevState,
+        domainError: "",
+        usernameError: "",
+        passwordError: "",
+        onlyFromAliasError: "",
+      };
+    });
+  };
+
+  const handleFormChange = (key: keyof State, value: any) => {
+    resetErrors();
+    setState((prevState) => {
+      return { ...prevState, [key]: value };
+    });
+  };
+
+  showError();
+
+  return state.error ? (
+    <Detail
+      markdown={"⚠️" + state.error}
+      actions={
+        <ActionPanel>
+          <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
+        </ActionPanel>
+      }
+    />
+  ) : (
+    <Form
+      isLoading={state.domains === undefined || state.isLoading}
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm title="Create Alias" onSubmit={(values) => handleSumbit(values)} />
+        </ActionPanel>
+      }
+    >
+      <Form.Dropdown id="domain" title="Domain" placeholder="Select a domain" error={state.domainError}>
+        {state.domains
+          ?.filter((domain) => !domain.banned && domain.active)
+          .map((domain) => (
+            <Form.Dropdown.Item key={domain.display} value={domain.display} title={domain.display} />
+          ))}
+      </Form.Dropdown>
+      <Form.TextField
+        id="username"
+        title="Username"
+        placeholder="Username"
+        error={state.usernameError}
+        value={state.username}
+        onChange={(value) => {
+          handleFormChange("username", value);
+        }}
+      />
+      <Form.TextField
+        id="password"
+        title="Password"
+        placeholder="Password"
+        error={state.passwordError}
+        value={state.password}
+        onChange={(value) => {
+          handleFormChange("password", value);
+        }}
+      />
+      <Form.Dropdown
+        id="onlyFromAlias"
+        title="Only from alias"
+        placeholder="Select an option"
+        value={state.onlyFromAlias ? "true" : "false"}
+        onChange={(value) => {
+          handleFormChange("onlyFromAlias", value === "true");
+        }}
+        error={state.onlyFromAliasError}
+      >
+        <Form.Dropdown.Item value="true" title="Only from this alias" />
+        <Form.Dropdown.Item value="false" title="From any alias" />
+      </Form.Dropdown>
+    </Form>
   );
 }

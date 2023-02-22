@@ -57,4 +57,11 @@ const fetchAccont = async (auth: string, API_URL: string ) => {
       return { source: Icon.CheckCircle, tintColor: Color.Green };
     }
 };
-  export { fetchAccont, domainIcon }
+
+
+const generatePassword =  () => {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  return Array(12).fill(chars).map(function (x) { return x[Math.floor(Math.random() * x.length)] }).join('')
+};
+
+export { fetchAccont, domainIcon,  generatePassword}
