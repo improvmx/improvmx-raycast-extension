@@ -6,10 +6,11 @@ import {
   Toast,
   getPreferenceValues,
   List,
+  Action,
   ActionPanel,
   Clipboard,
-  Action,
 } from "@raycast/api";
+
 import fetch, { FormData } from "node-fetch";
 import { useEffect, useState } from "react";
 import { fetchAccont, domainIcon } from "./utils";
@@ -27,6 +28,7 @@ interface State {
   domains?: Domain[];
   error?: string;
   forwardingEmail?: string;
+  isRequireUpgrade: boolean;
 }
 
 export default function CreateMaskedEmail() {
@@ -34,6 +36,7 @@ export default function CreateMaskedEmail() {
       domains: undefined,
       error: "",
       forwardingEmail: "",
+      isRequireUpgrade: false,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
@@ -46,7 +49,7 @@ export default function CreateMaskedEmail() {
         const apiResponse = await fetch(API_URL + "domains?=", {
           headers: {
             Authorization: "Basic " + auth,
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
           },
         });
 
@@ -66,6 +69,8 @@ export default function CreateMaskedEmail() {
         setState((prevState) => {
           return { ...prevState, domains: domains.domains, error: "" };
         });
+
+
       } catch (error) {
         setState((prevState) => {
           return { ...prevState, error: "Failed to fetch domains. Please try again later." };
@@ -92,6 +97,70 @@ export default function CreateMaskedEmail() {
     }
   };
 
+  const handleMaskedEmail = async (domain: Domain) => {
+    if (domain.banned || domain.active == false) {
+      showToast(Toast.Style.Failure, "Domain is banned or inactive");
+      return;
+    }
+
+    const form = new FormData();
+    form.append("alias", Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+    form.append("forward", state.forwardingEmail);
+
+    try {
+      const response = await fetch(API_URL + `domains/${domain.display}/aliases/`, {
+        method: "POST",
+        headers: {
+          Authorization: "Basic " + auth,
+        },
+        body: form,
+      });
+
+      if (await !response.ok) {
+        if ((await response.status) === 401) {
+          setState((prevState) => {
+            return { ...prevState, error: "Invalid API Token" };
+          });
+
+          return;
+        }
+
+        const apiErrors = (await response.json()) as { error?: string; errors?: Record<string, string[]> };
+
+
+        if (apiErrors.errors) {
+          const errorToShow = Object.values(apiErrors.errors).flat();
+
+          showToast(Toast.Style.Failure, errorToShow[0]);
+
+          if (errorToShow[0].startsWith("Your account is limited to")) {
+            setState((prevState) => {
+              return { ...prevState, isRequireUpgrade: true };
+            });
+          }
+
+          return;
+        }
+
+        return;
+      }
+
+      const data = (await response.json()) as { alias: { alias: string } };
+      await Clipboard.copy(data.alias.alias + "@" + domain.display);
+      await showHUD(
+        "Masked email created successfully " + data.alias.alias + "@" + domain.display + " and copied to clipboard"
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  const updateAction = (
+    <ActionPanel>
+      <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade Account" />
+    </ActionPanel>
+  )
+
   showError();
 
   return state.error ? (
@@ -111,50 +180,9 @@ export default function CreateMaskedEmail() {
             key={domain.display}
             title={domain.display}
             icon={domainIcon(domain)}
-            actions={
+            actions={state.isRequireUpgrade ? updateAction :
               <ActionPanel>
-                <Action
-                  title="Create a Masked Email Address"
-                  onAction={() => {
-                    if (domain.banned || domain.active == false) {
-                      showToast(Toast.Style.Failure, "Domain is banned or inactive");
-                      return;
-                    }
-
-                    const form = new FormData();
-                    form.append(
-                      "alias",
-                      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-                    );
-
-                    form.append("forward", state.forwardingEmail);
-
-                    fetch(API_URL + `domains/${domain.display}/aliases/`, {
-                      method: "POST",
-                      headers: {
-                        Authorization: "Basic " + auth,
-                      },
-                      body: form,
-                    })
-                      .then((response) => response.json())
-                      .then(async (data: any) => {
-                        await Clipboard.copy(data.alias.alias + "@" + domain.display);
-                        await showHUD(
-                          "Masked email created successfully " +
-                            data.alias.alias +
-                            "@" +
-                            domain.display +
-                            " and copied to clipboard"
-                        );
-                      })
-                      .catch(async (error) => {
-                        await showToast({
-                          style: Toast.Style.Failure,
-                          title: error.message,
-                        });
-                      });
-                  }}
-                />
+                <Action title="Create a Masked Email Address" onAction={() => handleMaskedEmail(domain)} />
               </ActionPanel>
             }
             detail={<List.Item.Detail markdown={"Create masked email using **" + domain.display + "**"} />}
