@@ -183,7 +183,17 @@ export default function CreateMaskedEmail() {
 
   showError();
 
-  return state.error ? (
+  return DEFAULT_DOMAIN ? (
+    // mention that we are using default domain
+    <Detail
+      markdown={`We are using your default domain [${DEFAULT_DOMAIN}](${DEFAULT_DOMAIN}) to create masked email. You can change your default domain in your Extension Preferences.`}
+      actions={
+        <ActionPanel>
+          <Action title="Open Extension Preferences" onAction={openCommandPreferences} />
+        </ActionPanel>
+      }
+    />
+  ) : state.error ? (
     <Detail
       markdown="There was an error with your API Token. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com."
       actions={
