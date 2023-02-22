@@ -25,7 +25,16 @@
       "title": "Create Masked Email Address",
       "subtitle": "ImprovMX",
       "description": "Generate a new masked email address",
-      "mode": "view"
+      "mode": "view",
+      "preferences": [
+        {
+          "name": "default_domain",
+          "title": "Default Domain",
+          "description": "The default domain to use when creating aliases",
+          "type": "textfield",
+          "required": false
+        }
+      ]
     },
     {
       "name": "add-domain",

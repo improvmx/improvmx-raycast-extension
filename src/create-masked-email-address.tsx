@@ -6,6 +6,7 @@ import {
   Toast,
   getPreferenceValues,
   List,
+  openCommandPreferences,
   Action,
   ActionPanel,
   Clipboard,
@@ -17,7 +18,9 @@ import { fetchAccont, domainIcon } from "./utils";
 
 interface Preferences {
   api_token: string;
+  default_domain: string;
 }
+
 interface Domain {
   display: string;
   banned?: boolean;
@@ -39,6 +42,7 @@ export default function CreateMaskedEmail() {
       isRequireUpgrade: false,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
+    DEFAULT_DOMAIN = getPreferenceValues<Preferences>().default_domain,
     API_URL = "https://api.improvmx.com/v3/";
 
   const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
@@ -69,8 +73,6 @@ export default function CreateMaskedEmail() {
         setState((prevState) => {
           return { ...prevState, domains: domains.domains, error: "" };
         });
-
-
       } catch (error) {
         setState((prevState) => {
           return { ...prevState, error: "Failed to fetch domains. Please try again later." };
@@ -116,8 +118,8 @@ export default function CreateMaskedEmail() {
         body: form,
       });
 
-      if (await !response.ok) {
-        if ((await response.status) === 401) {
+      if (!response.ok) {
+        if (response.status === 401) {
           setState((prevState) => {
             return { ...prevState, error: "Invalid API Token" };
           });
@@ -126,7 +128,6 @@ export default function CreateMaskedEmail() {
         }
 
         const apiErrors = (await response.json()) as { error?: string; errors?: Record<string, string[]> };
-
 
         if (apiErrors.errors) {
           const errorToShow = Object.values(apiErrors.errors).flat();
@@ -154,12 +155,31 @@ export default function CreateMaskedEmail() {
       console.log(error);
     }
   };
-  
+
+  const useDefaultDomain = async () => {
+    if (
+      DEFAULT_DOMAIN &&
+      state.domains !== undefined &&
+      state.domains.length > 0 &&
+      state.forwardingEmail !== undefined &&
+      state.forwardingEmail !== ""
+    ) {
+      const domain = state.domains?.find((domain) => domain.display === DEFAULT_DOMAIN);
+      if (domain) {
+        await handleMaskedEmail(domain);
+      } else {
+        showToast(Toast.Style.Failure, "Default domain is invalid. Please check your preferences.");
+      }
+    }
+  };
+
+  useDefaultDomain();
+
   const updateAction = (
     <ActionPanel>
       <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade Account" />
     </ActionPanel>
-  )
+  );
 
   showError();
 
@@ -180,10 +200,15 @@ export default function CreateMaskedEmail() {
             key={domain.display}
             title={domain.display}
             icon={domainIcon(domain)}
-            actions={state.isRequireUpgrade ? updateAction :
-              <ActionPanel>
-                <Action title="Create a Masked Email Address" onAction={() => handleMaskedEmail(domain)} />
-              </ActionPanel>
+            actions={
+              state.isRequireUpgrade ? (
+                updateAction
+              ) : (
+                <ActionPanel>
+                  <Action title="Create a Masked Email Address" onAction={() => handleMaskedEmail(domain)} />
+                  <Action title="Set default domain " onAction={openCommandPreferences} />
+                </ActionPanel>
+              )
             }
             detail={<List.Item.Detail markdown={"Create masked email using **" + domain.display + "**"} />}
           />
