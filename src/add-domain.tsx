@@ -1,4 +1,4 @@
-import { ActionPanel, Form, Action, Toast, getPreferenceValues, popToRoot, showToast } from "@raycast/api";
+import { ActionPanel, Form, Action, Toast, getPreferenceValues, popToRoot, showToast, LaunchProps } from "@raycast/api";
 import fetch from "node-fetch";
 import { useState } from "react";
 
@@ -11,17 +11,21 @@ interface State {
   isValid?: boolean;
   isLoading?: boolean;
   error: string;
+  isRequireUpgrade: boolean;
 }
 
-export default function AddDomain() {
+export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
   const [state, setState] = useState<State>({
     domain: undefined,
     isValid: false,
     isLoading: false,
     error: "",
+    isRequireUpgrade: false,
   });
 
-  const [domain, setDomain] = useState("");
+  const { draftValues } = props;
+
+  const [domain, setDomain] = useState(draftValues?.domain || "");
   const [isValid, setIsValid] = useState(true);
 
   const API_TOKEN = getPreferenceValues<Preferences>().api_token;
@@ -61,6 +65,7 @@ export default function AddDomain() {
             setState((prevState) => {
               return { ...prevState, error: "Invalid API Token", isLoading: false };
             });
+
             await showToast(Toast.Style.Failure, "Error", "Invalid API Token");
             setDomain("");
             setTimeout(() => {
@@ -69,22 +74,28 @@ export default function AddDomain() {
             return;
           }
 
-          const response = (await apiResponse.json()) as unknown;
-          const errors = response as { errors: { domain: Array<string> } };
-          const error = errors.errors.domain[0];
+          const apiErrors = (await apiResponse.json()) as { error?: string; errors?: Record<string, string[]> };
+          if (apiErrors.errors) {
+            const errorToShow = Object.values(apiErrors.errors).flat();
 
-          setState((prevState) => {
-            return { ...prevState, error: error, isLoading: false };
-          });
-          await showToast(Toast.Style.Failure, "Error", error);
-          setDomain("");
-          setTimeout(() => {
-            popToRoot({ clearSearchBar: true });
-          }, 2000);
-          
+            showToast(Toast.Style.Failure, errorToShow[0]);
+
+            if (errorToShow[0].startsWith("Your account is limited to")) {
+              setState((prevState) => {
+                return { ...prevState, isRequireUpgrade: true, isLoading: false };
+              });
+            }
+
+            await showToast(Toast.Style.Failure, "Error", errorToShow[0]);
+            setDomain("");
+            setState((prevState) => {
+              return { ...prevState, isLoading: false };
+            });
+          }
           return;
         }
-      } catch (error) {
+      } catch (err) {
+        console.log(err);
         return;
       }
 
@@ -99,19 +110,29 @@ export default function AddDomain() {
     }
   };
 
+  const upgradeAction = (
+    <ActionPanel>
+      <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade Account" />
+    </ActionPanel>
+  );
+
   return (
     <Form
       enableDrafts
       isLoading={state.isLoading}
       actions={
-        <ActionPanel>
-          <Action
-            title="Submit"
-            onAction={() => {
-              handleSubmit();
-            }}
-          />
-        </ActionPanel>
+        state.isRequireUpgrade ? (
+          upgradeAction
+        ) : (
+          <ActionPanel>
+            <Action
+              title="Submit"
+              onAction={() => {
+                handleSubmit();
+              }}
+            />
+          </ActionPanel>
+        )
       }
     >
       <Form.TextField

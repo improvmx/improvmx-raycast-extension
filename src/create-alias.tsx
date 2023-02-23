@@ -9,6 +9,7 @@ import {
   Clipboard,
   Action,
   Form,
+  popToRoot,
 } from "@raycast/api";
 import fetch from "node-fetch";
 import { useEffect, useState } from "react";
@@ -31,6 +32,7 @@ interface State {
   domainError?: string;
   isLoading: false;
   forwardingEmailError: string;
+  isRequireUpgrade: boolean;
 }
 
 export default function createAlias() {
@@ -42,6 +44,7 @@ export default function createAlias() {
       domainError: "",
       forwardingEmailError: "",
       isLoading: false,
+      isRequireUpgrade: false,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
@@ -133,7 +136,7 @@ export default function createAlias() {
         body: JSON.stringify(formData),
       });
 
-      if (await !apiResponse.ok) {
+      if (!apiResponse.ok) {
         if (apiResponse.status === 401) {
           setState((prevState) => {
             return { ...prevState, error: "Invalid API Token", isLoading: false };
@@ -143,26 +146,46 @@ export default function createAlias() {
 
           return;
         }
+        const apiErrors = (await apiResponse.json()) as { error?: string; errors?: Record<string, string[]> };
 
-        const response = (await apiResponse.json()) as unknown;
-        const errors = response as { errors: { alias: Array<string> } };
-        const error = errors.errors.alias[0];
+        if (apiErrors.errors) {
+          const errorToShow = Object.values(apiErrors.errors).flat();
+
+          showToast(Toast.Style.Failure, errorToShow[0]);
+
+          if (errorToShow[0].startsWith("Your account is limited to")) {
+            setState((prevState) => {
+              return { ...prevState, isRequireUpgrade: true };
+            });
+          }
+        }
 
         setState((prevState) => {
-          return { ...prevState, error: error, isLoading: false };
+          return { ...prevState, isLoading: false };
         });
 
-        await showToast(Toast.Style.Failure, "Error", error);
         return;
       }
     } catch (error) {
+      console.log(error);
       return;
     }
+
+    setState((prevState) => {
+      return { ...prevState, isLoading: false };
+    });
 
     await showToast(Toast.Style.Success, "Success", "Alias created successfully " + alias + "@" + domain);
     await Clipboard.copy(alias + "@" + domain);
     await showHUD("Alias copied to clipboard " + alias + "@" + domain);
+    await popToRoot();
   };
+
+  const upgradeAction = (
+    <ActionPanel>
+      <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade Account" />
+    </ActionPanel>
+  );
 
   showError();
 
@@ -170,9 +193,13 @@ export default function createAlias() {
     <Detail
       markdown={"⚠️" + state.error}
       actions={
-        <ActionPanel>
-          <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
-        </ActionPanel>
+        state.isRequireUpgrade ? (
+          upgradeAction
+        ) : (
+          <ActionPanel>
+            <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
+          </ActionPanel>
+        )
       }
     />
   ) : (

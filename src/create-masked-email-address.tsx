@@ -175,7 +175,7 @@ export default function CreateMaskedEmail() {
 
   useDefaultDomain();
 
-  const updateAction = (
+  const upgradeAction = (
     <ActionPanel>
       <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade Account" />
     </ActionPanel>
@@ -184,7 +184,6 @@ export default function CreateMaskedEmail() {
   showError();
 
   return DEFAULT_DOMAIN ? (
-    // mention that we are using default domain
     <Detail
       markdown={`We are using your default domain [${DEFAULT_DOMAIN}](${DEFAULT_DOMAIN}) to create masked email. You can change your default domain in your Extension Preferences.`}
       actions={
@@ -212,7 +211,7 @@ export default function CreateMaskedEmail() {
             icon={domainIcon(domain)}
             actions={
               state.isRequireUpgrade ? (
-                updateAction
+                upgradeAction
               ) : (
                 <ActionPanel>
                   <Action title="Create a Masked Email Address" onAction={() => handleMaskedEmail(domain)} />

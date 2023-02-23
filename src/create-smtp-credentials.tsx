@@ -35,6 +35,7 @@ interface State {
   onlyFromAliasError: string;
   passwordError: string;
   usernameError: string;
+  isRequireUpgrade: boolean;
 }
 
 export default function createSMTPCredentials() {
@@ -49,6 +50,7 @@ export default function createSMTPCredentials() {
       onlyFromAliasError: "",
       passwordError: "",
       usernameError: "",
+      isRequireUpgrade: false,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
@@ -161,9 +163,16 @@ export default function createSMTPCredentials() {
             return { ...prevState, error: response.error, isLoading: false };
           });
         } else if (response.errors?.username) {
-          setState((prevState) => {
-            return { ...prevState, usernameError: response.errors?.username?.[0] ?? "", isLoading: false };
-          });
+          if (response.errors?.username?.[0] === "You have reached the limit of account allowed for this domain.") {
+            showToast(Toast.Style.Failure, response.errors?.username?.[0]);
+            setState((prevState) => {
+              return { ...prevState, isRequireUpgrade: true, isLoading: false };
+            });
+          } else {
+            setState((prevState) => {
+              return { ...prevState, usernameError: response.errors?.username?.[0] ?? "", isLoading: false };
+            });
+          }
         } else if (response.errors?.password) {
           setState((prevState) => {
             return { ...prevState, passwordError: response.errors?.password?.[0] ?? "", isLoading: false };
@@ -199,6 +208,12 @@ export default function createSMTPCredentials() {
     }
   };
 
+  const upgradeAction = (
+    <ActionPanel>
+      <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade Account" />
+    </ActionPanel>
+  );
+
   const resetErrors = () => {
     setState((prevState) => {
       return {
@@ -233,9 +248,13 @@ export default function createSMTPCredentials() {
     <Form
       isLoading={state.domains === undefined || state.isLoading}
       actions={
-        <ActionPanel>
-          <Action.SubmitForm title="Create Alias" onSubmit={(values) => handleSumbit(values)} />
-        </ActionPanel>
+        state.isRequireUpgrade ? (
+          upgradeAction
+        ) : (
+          <ActionPanel>
+            <Action.SubmitForm title="Create Alias" onSubmit={(values) => handleSumbit(values)} />
+          </ActionPanel>
+        )
       }
     >
       <Form.Dropdown id="domain" title="Domain" placeholder="Select a domain" error={state.domainError}>
