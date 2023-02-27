@@ -99,7 +99,7 @@ export default function createAlias() {
 
   const showError = async () => {
     if (state.error) {
-      await showToast(Toast.Style.Failure, state.error);
+      await showToast(Toast.Style.Failure, 'ImprovMX Error', state.error);
     }
   };
 
@@ -113,7 +113,7 @@ export default function createAlias() {
       setState((prevState) => {
         return { ...prevState, aliasError, domainError, forwardingEmailError };
       });
-      showToast(Toast.Style.Failure, "Please fill out all required fields");
+      showToast(Toast.Style.Failure, "Invalid input", "Please fill out all required fields");
       return;
     }
 
@@ -142,7 +142,7 @@ export default function createAlias() {
             return { ...prevState, error: "Invalid API Token", isLoading: false };
           });
 
-          await showToast(Toast.Style.Failure, "Error", "Invalid API Token");
+          await showToast(Toast.Style.Failure, "ImprovMX Error", "Invalid API Token");
 
           return;
         }
@@ -151,7 +151,7 @@ export default function createAlias() {
         if (apiErrors.errors) {
           const errorToShow = Object.values(apiErrors.errors).flat();
 
-          showToast(Toast.Style.Failure, errorToShow[0]);
+          showToast(Toast.Style.Failure, 'ImprovMX Error', errorToShow[0]);
 
           if (errorToShow[0].startsWith("Your account is limited to")) {
             setState((prevState) => {
@@ -174,11 +174,11 @@ export default function createAlias() {
     setState((prevState) => {
       return { ...prevState, isLoading: false };
     });
-
-    await showToast(Toast.Style.Success, "Success", "Alias created successfully " + alias + "@" + domain);
+    await showToast(Toast.Style.Success, "Aias created", "Alias created and copied to clipboard " + alias + "@" + domain);
     await Clipboard.copy(alias + "@" + domain);
-    await showHUD("Alias copied to clipboard " + alias + "@" + domain);
-    await popToRoot();
+    await popToRoot({
+      clearSearchBar: true,
+    });
   };
 
   const upgradeAction = (
@@ -219,7 +219,7 @@ export default function createAlias() {
           ))}
       </Form.Dropdown>
 
-      <Form.TextField id="alias" title="Alias" placeholder="Enter an alias" error={state.aliasError} />
+      <Form.TextField id="alias" title='Alias (without @domain)' placeholder="Enter an alias" error={state.aliasError} />
       <Form.TextField
         id="forwardingEmail"
         title="Forwarding Email"

@@ -56,13 +56,6 @@
       "subtitle": "ImprovMX",
       "description": "Create SMTP credentials for a domain",
       "mode": "view"
-    },
-    {
-      "name": "refresh-account",
-      "title": "Refresh Account",
-      "subtitle": "ImprovMX",
-      "description": "Update ImprovMX account locally",
-      "mode": "no-view"
     }
   ],
   "dependencies": {

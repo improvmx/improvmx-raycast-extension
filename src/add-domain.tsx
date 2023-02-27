@@ -66,7 +66,7 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
               return { ...prevState, error: "Invalid API Token", isLoading: false };
             });
 
-            await showToast(Toast.Style.Failure, "Error", "Invalid API Token");
+            await showToast(Toast.Style.Failure, "ImprovMX Error", "Invalid API Token");
             setDomain("");
             setTimeout(() => {
               popToRoot({ clearSearchBar: true });
@@ -78,7 +78,7 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
           if (apiErrors.errors) {
             const errorToShow = Object.values(apiErrors.errors).flat();
 
-            showToast(Toast.Style.Failure, errorToShow[0]);
+            await showToast(Toast.Style.Failure, 'ImprovMX Error', errorToShow[0]);
 
             if (errorToShow[0].startsWith("Your account is limited to")) {
               setState((prevState) => {
@@ -86,7 +86,7 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
               });
             }
 
-            await showToast(Toast.Style.Failure, "Error", errorToShow[0]);
+            await showToast(Toast.Style.Failure, "ImprovMX Error", errorToShow[0]);
             setDomain("");
             setState((prevState) => {
               return { ...prevState, isLoading: false };
@@ -104,9 +104,7 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
       });
       await showToast(Toast.Style.Success, "Domain Added", "Domain added successfully to your ImprovMX account.");
       setDomain("");
-      setTimeout(() => {
         popToRoot({ clearSearchBar: true });
-      }, 2000);
     }
   };
 

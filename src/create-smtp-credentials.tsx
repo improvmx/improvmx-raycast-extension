@@ -5,9 +5,11 @@ import {
   Toast,
   getPreferenceValues,
   ActionPanel,
+  popToRoot,
   Clipboard,
   Action,
   Form,
+  LocalStorage,
 } from "@raycast/api";
 
 import fetch from "node-fetch";
@@ -36,6 +38,7 @@ interface State {
   passwordError: string;
   usernameError: string;
   isRequireUpgrade: boolean;
+  planName: string;
 }
 
 export default function createSMTPCredentials() {
@@ -51,9 +54,12 @@ export default function createSMTPCredentials() {
       passwordError: "",
       usernameError: "",
       isRequireUpgrade: false,
+      planName: "",
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
+
+
 
   const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
 
@@ -91,12 +97,31 @@ export default function createSMTPCredentials() {
       }
     }
 
+    async function getPlanName() {
+
+      const plan_name = await LocalStorage.getItem<string>("improvmx_plan_name") as string;
+
+      if (plan_name === null) {
+        setState((prevState) => {
+          return { ...prevState, error: "Failed to fetch plan name. Please try again later." };
+        });
+        return;
+      }
+      else {
+        setState((prevState) => {
+          return { ...prevState, planName: plan_name };
+        });
+      }
+    }
+
+
     getDomains();
+    getPlanName();
   }, []);
 
   const showError = async () => {
     if (state.error) {
-      await showToast(Toast.Style.Failure, state.error);
+      await showToast(Toast.Style.Failure, "ImprovMX Error", state.error);
     }
   };
 
@@ -164,7 +189,7 @@ export default function createSMTPCredentials() {
           });
         } else if (response.errors?.username) {
           if (response.errors?.username?.[0] === "You have reached the limit of account allowed for this domain.") {
-            showToast(Toast.Style.Failure, response.errors?.username?.[0]);
+            showToast(Toast.Style.Failure, "Limit Reached", response.errors?.username?.[0]);
             setState((prevState) => {
               return { ...prevState, isRequireUpgrade: true, isLoading: false };
             });
@@ -195,8 +220,10 @@ export default function createSMTPCredentials() {
       }
 
       await Clipboard.copy(password);
-      await showToast(Toast.Style.Success, "SMTP Credentials created successfully and password copied to clipboard");
-
+      await showToast(Toast.Style.Success, "SMTP Credentials Created", "Password copied to clipboard");
+      await popToRoot({
+        clearSearchBar: true,
+      });
       setState((prevState) => {
         return {
           ...prevState,
@@ -243,6 +270,12 @@ export default function createSMTPCredentials() {
           <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
         </ActionPanel>
       }
+    />
+  ) : 
+  state.planName === "Free" ? (
+    <Detail
+      markdown={"⚠️ You are currently on the free plan. Please upgrade to create SMTP credentials."}
+      actions={upgradeAction}
     />
   ) : (
     <Form
@@ -294,8 +327,8 @@ export default function createSMTPCredentials() {
         }}
         error={state.onlyFromAliasError}
       >
-        <Form.Dropdown.Item value="true" title="Only from this alias" />
-        <Form.Dropdown.Item value="false" title="From any alias" />
+        <Form.Dropdown.Item value="true" title="Just from this alias" />
+        <Form.Dropdown.Item value="false" title="Any alias" />
       </Form.Dropdown>
     </Form>
   );

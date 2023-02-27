@@ -10,6 +10,7 @@ import {
   Action,
   ActionPanel,
   Clipboard,
+  popToRoot,
 } from "@raycast/api";
 
 import fetch, { FormData } from "node-fetch";
@@ -95,13 +96,13 @@ export default function CreateMaskedEmail() {
 
   const showError = async () => {
     if (state.error) {
-      await showToast(Toast.Style.Failure, state.error);
+      await showToast(Toast.Style.Failure, "ImprovMX Error", state.error);
     }
   };
 
   const handleMaskedEmail = async (domain: Domain) => {
     if (domain.banned || domain.active == false) {
-      showToast(Toast.Style.Failure, "Domain is banned or inactive");
+      showToast(Toast.Style.Failure, "Invalid Domain", "Domain is banned or inactive");
       return;
     }
 
@@ -132,7 +133,7 @@ export default function CreateMaskedEmail() {
         if (apiErrors.errors) {
           const errorToShow = Object.values(apiErrors.errors).flat();
 
-          showToast(Toast.Style.Failure, errorToShow[0]);
+          showToast(Toast.Style.Failure, "ImprovMX Error", errorToShow[0]);
 
           if (errorToShow[0].startsWith("Your account is limited to")) {
             setState((prevState) => {
@@ -151,6 +152,10 @@ export default function CreateMaskedEmail() {
       await showHUD(
         "Masked email created successfully " + data.alias.alias + "@" + domain.display + " and copied to clipboard"
       );
+      await showToast(Toast.Style.Success, "Masked email created successfully", data.alias.alias + "@" + domain.display);
+      await popToRoot({
+        clearSearchBar: true,
+      })
     } catch (error) {
       console.log(error);
     }
@@ -168,7 +173,7 @@ export default function CreateMaskedEmail() {
       if (domain) {
         await handleMaskedEmail(domain);
       } else {
-        showToast(Toast.Style.Failure, "Default domain is invalid. Please check your preferences.");
+        showToast(Toast.Style.Failure, "Invalid Domain",  "Your default domain is invalid. Please update it from this command preferences");
       }
     }
   };

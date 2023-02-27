@@ -20,7 +20,7 @@ const fetchAccountAPI = async (auth: string, API_URL: string) => {
 
     if (apiResponseJSON.success === false) {
       const errorMessage = apiResponseJSON.error ?? "ImprovMX API Error";
-      showToast(Toast.Style.Failure, errorMessage);
+      await showToast(Toast.Style.Failure, 'ImprovMX Error', errorMessage);
       return;
     }
 
@@ -32,14 +32,13 @@ const fetchAccountAPI = async (auth: string, API_URL: string) => {
       await LocalStorage.setItem("improvmx_unix_timestamp", Math.floor(Date.now() / 1000));
       return email;
     } else {
-      const errorMessage = "ImprovMX: Failed to parse ImprovMX API response";
-      showToast(Toast.Style.Failure, errorMessage);
+      const errorMessage = "Failed to parse ImprovMX API response";
+      await showToast(Toast.Style.Failure,'ImprovMX Error', errorMessage);
       return;
     }
   } catch (error) {
     console.log(error);
-
-    showToast(Toast.Style.Failure, "Failed to fetch account details");
+    showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to fetch account details, please check your API key");
     return;
   }
 };
