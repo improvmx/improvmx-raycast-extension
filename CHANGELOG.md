@@ -1,3 +1,5 @@
-# ImprovMX Changelog
+# ImproVMX Changelog
 
-## [Initial Version] - 2023-02-09
+## [Initialized ImprovMX Raycast Extension] - 2023-02-27
+
+Initial release of ImprovMX Raycast Extension

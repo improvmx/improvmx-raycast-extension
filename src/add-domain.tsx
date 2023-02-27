@@ -110,7 +110,7 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
 
   const upgradeAction = (
     <ActionPanel>
-      <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade Account" />
+      <Action.OpenInBrowser url="https://app.improvmx.com/account/payment" title="Upgrade ImprovMX Account" />
     </ActionPanel>
   );
 
