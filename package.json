@@ -51,6 +51,7 @@
       "description": "Create a new alias for a domain",
       "mode": "view"
     },
+   
     {
       "name": "create-smtp-credentials",
       "title": "Create SMTP Credentials",
@@ -59,8 +60,8 @@
       "mode": "view"
     }, 
     {
-      "name": "open-dashboard-to-manage-domains-and-aliases",
-      "title": "Open Dashboard to Manage Domains and Aliases",
+      "name": "open-dashboard",
+      "title": "Open Dashboard",
       "subtitle": "ImprovMX",
       "description": "Open the ImprovMX dashboard to manage domains and aliases",
       "mode": "no-view"

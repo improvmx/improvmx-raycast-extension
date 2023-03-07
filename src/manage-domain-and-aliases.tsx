@@ -21,10 +21,17 @@ interface Preferences {
   api_token: string;
 }
 
+interface Alias {
+  forward: string;
+  alias: string;
+  id: number;
+}
+
 interface Domain {
   display: string;
   banned?: boolean;
   active?: boolean;
+  aliases: Alias[];
 }
 
 interface Alias {
@@ -40,6 +47,7 @@ interface State {
   isRequireUpgrade: boolean;
   aliasView: boolean;
   aliases: Alias[];
+  selectedDomain: string;
 }
 
 export default function CreateMaskedEmail() {
@@ -50,6 +58,7 @@ export default function CreateMaskedEmail() {
       isRequireUpgrade: false,
       aliasView: false,
       aliases: [],
+      selectedDomain: "",
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
@@ -115,7 +124,7 @@ export default function CreateMaskedEmail() {
     }
 
     setState((prevState) => {
-      return { ...prevState, aliasView: true };
+      return { ...prevState, aliasView: true, selectedDomain: domain.display };
     });
 
     try {
@@ -157,20 +166,22 @@ export default function CreateMaskedEmail() {
     />
   ) : !state.aliasView ? (
     <List isLoading={state.domains === undefined} searchBarPlaceholder="Search for domain...">
-      <List.Section title="Domains">
-        {state.domains?.map((domain: Domain) => (
-          <List.Item
-            key={domain.display}
-            title={domain.display}
-            icon={domainIcon(domain)}
-            actions={
-              <ActionPanel>
-                <Action title="Show Aliases" onAction={() => showAliases(domain)} />
-              </ActionPanel>
-            }
-            // detail={<List.Item.Detail markdown={"Domain: **" + domain.display + "**"} />}
-          />
-        ))}
+      <List.Section title="Active Domains">
+        {state.domains
+          ?.filter((domain) => domain.active)
+          .map((domain: Domain) => (
+            <List.Item
+              key={domain.display}
+              title={domain.display}
+              icon={domainIcon(domain)}
+              accessories={[{ text: { value: domain.aliases.length.toString() + " aliases" } }]}
+              actions={
+                <ActionPanel>
+                  <Action title="Show Aliases" onAction={() => showAliases(domain)} />
+                </ActionPanel>
+              }
+            />
+          ))}
         {state.domains && (
           <List.Item
             title="Create New Domain"
@@ -188,14 +199,32 @@ export default function CreateMaskedEmail() {
           />
         )}
       </List.Section>
+      <List.Section title="Inactive Domains">
+        {state.domains
+          ?.filter((domain) => !domain.active)
+          .map((domain: Domain) => (
+            <List.Item
+              key={domain.display}
+              title={domain.display}
+              icon={domainIcon(domain)}
+              accessories={[{ text: { value: domain.aliases.length.toString() + " aliases" } }]}
+              actions={
+                <ActionPanel>
+                  <Action title="Show Aliases" onAction={() => showAliases(domain)} />
+                </ActionPanel>
+              }
+            />
+          ))}
+      </List.Section>
     </List>
   ) : (
-    <List isLoading={state.aliases === undefined} searchBarPlaceholder="Search for aliases...">
+    <List isLoading={state.aliases.length === 0} searchBarPlaceholder="Search for alias...">
       <List.Section title="Aliases">
         {state.aliases?.map((alias: Alias) => (
           <List.Item
             key={alias.alias}
-            title={alias.alias}
+            title={alias.alias + "@" + state.selectedDomain}
+            accessories={[{ text: { value: alias.forward } }]}
             actions={
               <ActionPanel>
                 <Action
@@ -207,10 +236,9 @@ export default function CreateMaskedEmail() {
                 />
               </ActionPanel>
             }
-            // detail={<List.Item.Detail markdown={"Forwarding email: **" + alias.forward + "**"} />}
           />
         ))}
-        {state.aliases !== undefined && (
+        {state.aliases.length !== 0 && (
           <List.Item
             title="Create New Alias"
             icon={{ source: Icon.Plus }}
