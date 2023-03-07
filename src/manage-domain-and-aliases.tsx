@@ -228,10 +228,10 @@ export default function CreateMaskedEmail() {
             actions={
               <ActionPanel>
                 <Action
-                  title="Copy Forwarding Email"
+                  title="Copy alias"
                   onAction={async () => {
-                    await Clipboard.copy(alias.forward);
-                    await showToast(Toast.Style.Success, "Copied", "Copied forwarding email to clipboard");
+                    await Clipboard.copy(alias.alias + "@" + state.selectedDomain);
+                    await showToast(Toast.Style.Success, "Copied", "Alias copied to clipboard");
                   }}
                 />
               </ActionPanel>
