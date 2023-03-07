@@ -63,9 +63,9 @@ const fetchAccont = async (auth: string, API_URL: string) => {
 
 const domainIcon = (domain: Domain) => {
   if (domain.banned || domain.active == false) {
-    return { source: Icon.ExclamationMark, tintColor: Color.Red };
+    return { source: Icon.Dot, tintColor: Color.Red };
   } else {
-    return { source: Icon.CircleFilled, tintColor: Color.Green };
+    return { source: Icon.Dot, tintColor: Color.Green };
   }
 };
 
