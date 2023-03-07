@@ -184,12 +184,12 @@ export default function CreateMaskedEmail() {
           ))}
         {state.domains && (
           <List.Item
-            title="Create New Domain"
+            title="Add New Domain"
             icon={{ source: Icon.Plus }}
             actions={
               <ActionPanel>
                 <Action
-                  title="Create new domain"
+                  title="Add new domain"
                   onAction={async () => {
                     await launchCommand({ name: "add-domain", type: LaunchType.UserInitiated });
                   }}
@@ -262,7 +262,7 @@ export default function CreateMaskedEmail() {
                 <Action
                   title="Create masked email address"
                   onAction={async () => {
-                    await launchCommand({ name: "create-masked-email-address", type: LaunchType.UserInitiated });
+                    await launchCommand({ name: "create-masked-email-address", type: LaunchType.UserInitiated, arguments: { domain: state.selectedDomain } });
                   }}
                 />
               </ActionPanel>

@@ -11,6 +11,7 @@ import {
   ActionPanel,
   Clipboard,
   popToRoot,
+  LaunchProps,
 } from "@raycast/api";
 
 import fetch, { FormData } from "node-fetch";
@@ -42,7 +43,16 @@ interface State {
   isRequireUpgrade: boolean;
 }
 
-export default function CreateMaskedEmail() {
+interface DomainArgs {
+  domain: Domain;
+}
+
+export default function CreateMaskedEmail(props: LaunchProps<{ arguments: DomainArgs}>) {
+
+  const domainFromArgs = props.arguments.domain;
+  
+
+
   const [state, setState] = useState<State>({
       domains: undefined,
       error: "",
@@ -50,7 +60,7 @@ export default function CreateMaskedEmail() {
       isRequireUpgrade: false,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
-    DEFAULT_DOMAIN = getPreferenceValues<Preferences>().default_domain,
+    DEFAULT_DOMAIN = getPreferenceValues<Preferences>().default_domain || domainFromArgs,
     API_URL = "https://api.improvmx.com/v3/";
 
   const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
@@ -205,7 +215,7 @@ export default function CreateMaskedEmail() {
 
   return DEFAULT_DOMAIN ? (
     <Detail
-      markdown={`We are using your default domain [${DEFAULT_DOMAIN}](${DEFAULT_DOMAIN}) to create masked email. You can change your default domain in your Extension Preferences.`}
+      markdown={`We are using your domain [${DEFAULT_DOMAIN}](${DEFAULT_DOMAIN}) to create masked email. You can change your default domain in your Extension Preferences.`}
       actions={
         <ActionPanel>
           <Action title="Open Extension Preferences" onAction={openCommandPreferences} />
