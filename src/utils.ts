@@ -65,7 +65,7 @@ const domainIcon = (domain: Domain) => {
   if (domain.banned || domain.active == false) {
     return { source: Icon.ExclamationMark, tintColor: Color.Red };
   } else {
-    return { source: Icon.CheckCircle, tintColor: Color.Green };
+    return { source: Icon.CircleFilled, tintColor: Color.Green };
   }
 };
 
