@@ -239,6 +239,7 @@ export default function CreateMaskedEmail() {
           />
         ))}
         {state.aliases.length !== 0 && (
+          <>
           <List.Item
             title="Create New Alias"
             icon={{ source: Icon.Plus }}
@@ -253,6 +254,21 @@ export default function CreateMaskedEmail() {
               </ActionPanel>
             }
           />
+          <List.Item
+            title="Create Masked Email Address"
+            icon={{ source: Icon.Plus }}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Create masked email address"
+                  onAction={async () => {
+                    await launchCommand({ name: "create-masked-email-address", type: LaunchType.UserInitiated });
+                  }}
+                />
+              </ActionPanel>
+            }
+          />
+          </>
         )}
       </List.Section>
     </List>
