@@ -22,10 +22,17 @@ interface Preferences {
   default_domain: string;
 }
 
+interface Alias {
+  forward: string;
+  alias: string;
+  id: number;
+}
+
 interface Domain {
   display: string;
   banned?: boolean;
   active?: boolean;
+  aliases: Alias[];
 }
 
 interface State {
@@ -215,26 +222,49 @@ export default function CreateMaskedEmail() {
       }
     />
   ) : (
-    <List isLoading={state.domains === undefined} searchBarPlaceholder="Search for domain..." isShowingDetail>
-      <List.Section title="Domains">
-        {state.domains?.map((domain: Domain) => (
-          <List.Item
-            key={domain.display}
-            title={domain.display}
-            icon={domainIcon(domain)}
-            actions={
-              state.isRequireUpgrade ? (
-                upgradeAction
-              ) : (
-                <ActionPanel>
-                  <Action title="Create a Masked Email Address" onAction={() => handleMaskedEmail(domain)} />
-                  <Action title="Set default domain " onAction={openCommandPreferences} />
-                </ActionPanel>
-              )
-            }
-            // detail={<List.Item.Detail markdown={"Create masked email using **" + domain.display + "**"} />}
-          />
-        ))}
+    <List isLoading={state.domains === undefined} searchBarPlaceholder="Search for domain...">
+      <List.Section title="Active Domains">
+        {state.domains
+          ?.filter((domain) => domain.active)
+          .map((domain) => (
+            <List.Item
+              key={domain.display}
+              title={domain.display}
+              icon={domainIcon(domain)}
+              accessories={[{ text: { value: domain.aliases.length.toString() + " aliases" } }]}
+              actions={
+                state.isRequireUpgrade ? (
+                  upgradeAction
+                ) : (
+                  <ActionPanel>
+                    <Action title="Create a Masked Email Address" onAction={() => handleMaskedEmail(domain)} />
+                    <Action title="Set default domain" onAction={openCommandPreferences} />
+                  </ActionPanel>
+                )
+              }
+            />
+          ))}
+      </List.Section>
+      <List.Section title="Inactive Domains">
+        {state.domains
+          ?.filter((domain) => !domain.active)
+          .map((domain) => (
+            <List.Item
+              key={domain.display}
+              title={domain.display}
+              icon={domainIcon(domain)}
+              actions={
+                state.isRequireUpgrade ? (
+                  upgradeAction
+                ) : (
+                  <ActionPanel>
+                    <Action title="Create a Masked Email Address" onAction={() => handleMaskedEmail(domain)} />
+                    <Action title="Set default domain" onAction={openCommandPreferences} />
+                  </ActionPanel>
+                )
+              }
+            />
+          ))}
       </List.Section>
     </List>
   );

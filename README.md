@@ -28,7 +28,7 @@ Create a new alias for a domain.
 
 Create SMTP credentials for a domain.
 
-### Open the ImprovMX dashboard to manage domains and aliases
+### Open Dashboard
 
 Open the ImprovMX dashboard in the default browser to manage domains and aliases.
 
