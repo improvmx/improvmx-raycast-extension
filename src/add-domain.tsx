@@ -1,4 +1,15 @@
-import { ActionPanel, Form, Action, Toast, getPreferenceValues, popToRoot, showToast, LaunchProps } from "@raycast/api";
+import {
+  ActionPanel,
+  Form,
+  Action,
+  Toast,
+  getPreferenceValues,
+  popToRoot,
+  showToast,
+  LaunchProps,
+  Detail,
+  openExtensionPreferences,
+} from "@raycast/api";
 import fetch from "node-fetch";
 import { useState } from "react";
 
@@ -89,13 +100,21 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
             await showToast(Toast.Style.Failure, "ImprovMX Error", errorToShow[0]);
             setDomain("");
             setState((prevState) => {
-              return { ...prevState, isLoading: false };
+              return { ...prevState, isLoading: false, error: errorToShow[0] };
             });
           }
           return;
         }
       } catch (err) {
-        console.log(err);
+        setState((prevState) => {
+          return {
+            ...prevState,
+            error:
+              "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your Improvmx Dashboard at https://improvmx.com/dashboard. If you need help, please contact support@improvmx.com.",
+            isLoading: false,
+          };
+        });
+        await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to add domain. Please try again later.");
         return;
       }
 
@@ -114,7 +133,16 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
     </ActionPanel>
   );
 
-  return (
+  return state.error ? (
+    <Detail
+      markdown={state.error}
+      actions={
+        <ActionPanel>
+          <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
+        </ActionPanel>
+      }
+    />
+  ) : (
     <Form
       enableDrafts
       isLoading={state.isLoading}

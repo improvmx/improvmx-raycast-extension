@@ -228,7 +228,7 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
     />
   ) : state.error ? (
     <Detail
-      markdown="There was an error with your API Token. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com."
+    markdown="There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com."
       actions={
         <ActionPanel>
           <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
