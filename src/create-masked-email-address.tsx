@@ -41,6 +41,7 @@ interface State {
   error?: string;
   forwardingEmail?: string;
   isRequireUpgrade: boolean;
+  isDomainsLoading: boolean;
 }
 
 interface DomainArgs {
@@ -50,14 +51,13 @@ interface DomainArgs {
 export default function CreateMaskedEmail(props: LaunchProps<{ arguments: DomainArgs}>) {
 
   const domainFromArgs = props.arguments.domain;
-  
-
 
   const [state, setState] = useState<State>({
       domains: undefined,
       error: "",
       forwardingEmail: "",
       isRequireUpgrade: false,
+      isDomainsLoading: false,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     DEFAULT_DOMAIN = getPreferenceValues<Preferences>().default_domain || domainFromArgs,
@@ -68,6 +68,11 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
   useEffect(() => {
     async function getDomains() {
       try {
+
+        setState((prevState) => {
+          return { ...prevState, isDomainsLoading: true };
+        });
+
         const apiResponse = await fetch(API_URL + "domains?=", {
           headers: {
             Authorization: "Basic " + auth,
@@ -93,7 +98,7 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
         });
       } catch (error) {
         setState((prevState) => {
-          return { ...prevState, error: "Failed to fetch domains. Please try again later." };
+          return { ...prevState, error: "Failed to fetch domains. Please try again later.", isDomainsLoading: false };
         });
         return;
       }
@@ -101,7 +106,6 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
 
     async function forwardingEmailFn() {
       const email = await fetchAccont(auth, API_URL);
-      setState({ ...state, forwardingEmail: email });
       setState((prevState) => {
         return { ...prevState, forwardingEmail: email };
       });
