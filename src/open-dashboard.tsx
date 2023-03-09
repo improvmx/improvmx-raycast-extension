@@ -15,9 +15,10 @@ export default async () => {
       },
     });
 
+
     if (!response.ok) {
       const error = (await response.json()) as { error: string };
-      showToast(Toast.Style.Failure, "ImprovMX Error", error.error);
+      await showToast(Toast.Style.Failure, "ImprovMX Error", error.error);
       return;
     }
 
@@ -29,7 +30,7 @@ export default async () => {
       clearSearchBar: true,
     });
   } catch (error: any) {
-    showToast(Toast.Style.Failure, "ImprovMX Error", error);
+    await showToast(Toast.Style.Failure, "ImprovMX Error", "There was an error with your request. Make sure you are connected to the internet.");
     return;
   }
 };
