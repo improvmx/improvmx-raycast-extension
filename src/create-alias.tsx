@@ -1,5 +1,4 @@
 import {
-  showHUD,
   openExtensionPreferences,
   showToast,
   Detail,
@@ -79,8 +78,13 @@ export default function createAlias() {
         });
       } catch (error) {
         setState((prevState) => {
-          return { ...prevState, error: "Failed to fetch domains. Please try again later." };
+          return { ...prevState, error: "Failed to fetch domains. Please try again later.", isLoading: false };
         });
+
+        state.isLoading = false;
+        state.error =
+          "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com";
+
         return;
       }
     }
@@ -167,7 +171,11 @@ export default function createAlias() {
         return;
       }
     } catch (error) {
-      console.log(error);
+      setState((prevState) => {
+        return { ...prevState, error: "Failed to create alias. Please try again later.", isLoading: false };
+      });
+
+      await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to create alias. Please try again later.");
       return;
     }
 

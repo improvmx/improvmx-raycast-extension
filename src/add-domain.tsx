@@ -135,7 +135,7 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
 
   return state.error ? (
     <Detail
-      markdown={state.error}
+      markdown={"⚠️" + state.error}
       actions={
         <ActionPanel>
           <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />

@@ -48,10 +48,10 @@ interface State {
   aliasView: boolean;
   aliases: Alias[];
   selectedDomain: string;
-  isDomainLoading: boolean;
+  isDomainsLoading: boolean;
 }
 
-export default function ManageDomainAndAliases() {
+export default function CreateMaskedEmail() {
   const [state, setState] = useState<State>({
       domains: undefined,
       error: "",
@@ -60,7 +60,7 @@ export default function ManageDomainAndAliases() {
       aliasView: false,
       aliases: [],
       selectedDomain: "",
-      isDomainLoading: false,
+      isDomainsLoading: false,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
@@ -68,11 +68,10 @@ export default function ManageDomainAndAliases() {
   const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
 
   useEffect(() => {
+
     async function getDomains() {
 
-      setState((prevState) => {
-        return { ...prevState, isDomainLoading: true };
-      });
+      state.isDomainsLoading = true
 
       try {
         const apiResponse = await fetch(API_URL + "domains?=", {
@@ -85,38 +84,30 @@ export default function ManageDomainAndAliases() {
         if (!apiResponse.ok) {
           if (apiResponse.status === 401) {
             setState((prevState) => {
-              return { ...prevState, error: "Invalid API Token", isDomainLoading: false };
+              return { ...prevState, error: "Invalid API Token" };
             });
 
             return;
           }
         }
 
-
         const response = (await apiResponse.json()) as unknown;
         const domains = response as { domains: Array<Domain> };
 
-        setState((prevState) => {
-          return { ...prevState, domains: domains.domains, isDomainLoading: false };
-        });
-
-      }catch (err) {
 
         setState((prevState) => {
-          return {
-            ...prevState,
-            isDomainLoading: false,
-          };
+          return { ...prevState, domains: domains.domains, error: "", isDomainsLoading: false };
         });
 
-        state.error = "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com"
-      
-        await showToast(
-          Toast.Style.Failure,
-          "ImprovMX Error",
-          "Failed to fetch domains. Please try again later."
-        );
         
+      } catch (error) {
+
+        setState((prevState) => {
+          return { ...prevState, error: "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com" };
+        });
+
+        await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to fetch domains. Please try again later.");
+      
         return;
       }
     }
@@ -133,6 +124,11 @@ export default function ManageDomainAndAliases() {
     forwardingEmailFn();
   }, []);
 
+  const showError = async () => {
+    if (state.error) {
+      await showToast(Toast.Style.Failure, "ImprovMX Error", state.error);
+    }
+  };
 
   const showAliases = async (domain: Domain) => {
     if (domain.banned || domain.active == false) {
@@ -156,8 +152,6 @@ export default function ManageDomainAndAliases() {
         setState((prevState) => {
           return { ...prevState, error: "Failed to fetch aliases. Please try again later." };
         });
-        
-        await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to fetch aliases. Please try again later.");
         return;
       }
 
@@ -167,32 +161,24 @@ export default function ManageDomainAndAliases() {
       setState((prevState) => {
         return { ...prevState, aliases: aliases.aliases, error: "" };
       });
-    } catch (err) {
-      setState((prevState) => {
-        return {
-          ...prevState,
-          error:
-            "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com",
-          isDomainLoading: false,
-        };
-      });
-
-      await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to fetch aliases. Please try again later.");
-      return
+    } catch (error) {
+      console.log(error);
     }
   };
 
+  showError();
+
   return state.error ? (
     <Detail
-    markdown={state.error}
+      markdown={state.error}
       actions={
         <ActionPanel>
           <Action title="Open Extension Preferences" onAction={openExtensionPreferences} />
         </ActionPanel>
       }
     />
-  ) : !state.error && state.aliasView ? (
-    <List isLoading={state.isDomainLoading} searchBarPlaceholder="Search for domain...">
+  ) : !state.aliasView ? (
+    <List isLoading={state.isDomainsLoading === true} searchBarPlaceholder="Search for domain...">
       <List.Section title="Active Domains">
         {state.domains
           ?.filter((domain) => domain.active)

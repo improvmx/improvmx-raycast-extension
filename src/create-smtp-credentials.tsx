@@ -74,9 +74,10 @@ export default function createSMTPCredentials() {
         if (!apiResponse.ok) {
           if (apiResponse.status === 401) {
             setState((prevState) => {
-              return { ...prevState, error: "Invalid API Token" };
+              return { ...prevState, error: "Invalid API Token", isLoading: false };
             });
 
+            await showToast(Toast.Style.Failure, "ImprovMX Error", "Invalid API Token");
             return;
           }
         }
@@ -84,13 +85,23 @@ export default function createSMTPCredentials() {
         const response = (await apiResponse.json()) as unknown;
         const domains = response as { domains: Array<Domain> };
 
+        
+
         setState((prevState) => {
           return { ...prevState, domains: domains.domains, error: "" };
         });
       } catch (error) {
         setState((prevState) => {
-          return { ...prevState, error: "Failed to fetch domains. Please try again later." };
+          return {
+            ...prevState,
+            error:
+              "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com",
+            isLoading: false,
+          };
         });
+
+        await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to fetch domains. Please try again later.");
+
         return;
       }
     }
@@ -113,12 +124,6 @@ export default function createSMTPCredentials() {
     getDomains();
     getPlanName();
   }, []);
-
-  const showError = async () => {
-    if (state.error) {
-      await showToast(Toast.Style.Failure, "ImprovMX Error", state.error);
-    }
-  };
 
   const handleSumbit = async (values: any) => {
     resetErrors();
@@ -254,8 +259,6 @@ export default function createSMTPCredentials() {
       return { ...prevState, [key]: value };
     });
   };
-
-  showError();
 
   return state.error ? (
     <Detail
