@@ -68,10 +68,8 @@ export default function CreateMaskedEmail() {
   const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
 
   useEffect(() => {
-
     async function getDomains() {
-
-      state.isDomainsLoading = true
+      state.isDomainsLoading = true;
 
       try {
         const apiResponse = await fetch(API_URL + "domains?=", {
@@ -94,20 +92,20 @@ export default function CreateMaskedEmail() {
         const response = (await apiResponse.json()) as unknown;
         const domains = response as { domains: Array<Domain> };
 
-
         setState((prevState) => {
           return { ...prevState, domains: domains.domains, error: "", isDomainsLoading: false };
         });
-
-        
       } catch (error) {
-
         setState((prevState) => {
-          return { ...prevState, error: "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com" };
+          return {
+            ...prevState,
+            error:
+              "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com",
+          };
         });
 
         await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to fetch domains. Please try again later.");
-      
+
         return;
       }
     }
@@ -132,7 +130,7 @@ export default function CreateMaskedEmail() {
 
   const showAliases = async (domain: Domain) => {
     if (domain.banned || domain.active == false) {
-      showToast(Toast.Style.Failure, "Invalid Domain", "Domain is banned or inactive");
+      showToast(Toast.Style.Failure, "Invalid Domain", "Domain not configured properly");
       return;
     }
 
@@ -253,34 +251,38 @@ export default function CreateMaskedEmail() {
         ))}
         {state.aliases.length !== 0 && (
           <>
-          <List.Item
-            title="Create New Alias"
-            icon={{ source: Icon.Plus }}
-            actions={
-              <ActionPanel>
-                <Action
-                  title="Create new alias"
-                  onAction={async () => {
-                    await launchCommand({ name: "create-alias", type: LaunchType.UserInitiated });
-                  }}
-                />
-              </ActionPanel>
-            }
-          />
-          <List.Item
-            title="Create Masked Email Address"
-            icon={{ source: Icon.Plus }}
-            actions={
-              <ActionPanel>
-                <Action
-                  title="Create masked email address"
-                  onAction={async () => {
-                    await launchCommand({ name: "create-masked-email-address", type: LaunchType.UserInitiated, arguments: { domain: state.selectedDomain } });
-                  }}
-                />
-              </ActionPanel>
-            }
-          />
+            <List.Item
+              title="Create New Alias"
+              icon={{ source: Icon.Plus }}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Create new alias"
+                    onAction={async () => {
+                      await launchCommand({ name: "create-alias", type: LaunchType.UserInitiated });
+                    }}
+                  />
+                </ActionPanel>
+              }
+            />
+            <List.Item
+              title="Create Masked Email Address"
+              icon={{ source: Icon.Plus }}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Create masked email address"
+                    onAction={async () => {
+                      await launchCommand({
+                        name: "create-masked-email-address",
+                        type: LaunchType.UserInitiated,
+                        arguments: { domain: state.selectedDomain },
+                      });
+                    }}
+                  />
+                </ActionPanel>
+              }
+            />
           </>
         )}
       </List.Section>
