@@ -25,7 +25,7 @@ interface State {
   isRequireUpgrade: boolean;
 }
 
-export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
+export default function AddDomain() {
   const [state, setState] = useState<State>({
     domain: undefined,
     isValid: false,
@@ -34,9 +34,8 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
     isRequireUpgrade: false,
   });
 
-  const { draftValues } = props;
 
-  const [domain, setDomain] = useState(draftValues?.domain || "");
+  const [domain, setDomain] = useState("");
   const [isValid, setIsValid] = useState(true);
 
   const API_TOKEN = getPreferenceValues<Preferences>().api_token;
@@ -71,7 +70,7 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
           }),
         });
 
-        if (await !apiResponse.ok) {
+        if (!apiResponse.ok) {
           if (apiResponse.status === 401) {
             setState((prevState) => {
               return { ...prevState, error: "Invalid API Token", isLoading: false };
@@ -144,7 +143,6 @@ export default function AddDomain(props: LaunchProps<{ draftValues: State }>) {
     />
   ) : (
     <Form
-      enableDrafts
       isLoading={state.isLoading}
       actions={
         state.isRequireUpgrade ? (

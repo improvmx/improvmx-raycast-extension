@@ -96,16 +96,9 @@ export default function CreateMaskedEmail() {
           return { ...prevState, domains: domains.domains, error: "", isDomainsLoading: false };
         });
       } catch (error) {
-        setState((prevState) => {
-          return {
-            ...prevState,
-            error:
-              "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com",
-          };
-        });
-
+        state.error = "There was an error with your request. Make sure you are connected to the internet. Please check that your API Token is correct and up-to-date. You can find your API Token in your [Improvmx Dashboard](https://improvmx.com/dashboard). If you need help, please contact support@improvmx.com",
+        state.isDomainsLoading = false;
         await showToast(Toast.Style.Failure, "ImprovMX Error", "Failed to fetch domains. Please try again later.");
-
         return;
       }
     }
