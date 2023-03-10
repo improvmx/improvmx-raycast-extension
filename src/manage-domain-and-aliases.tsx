@@ -60,7 +60,7 @@ export default function CreateMaskedEmail() {
       aliasView: false,
       aliases: [],
       selectedDomain: "",
-      isDomainsLoading: false,
+      isDomainsLoading: true,
     }),
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     API_URL = "https://api.improvmx.com/v3/";
