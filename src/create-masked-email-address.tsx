@@ -42,6 +42,7 @@ interface State {
   forwardingEmail?: string;
   isRequireUpgrade: boolean;
   isDomainsLoading: boolean;
+  aliasSubmitLoading: boolean;
 }
 
 interface DomainArgs {
@@ -49,15 +50,15 @@ interface DomainArgs {
 }
 
 export default function CreateMaskedEmail(props: LaunchProps<{ arguments: DomainArgs }>) {
-  const domainFromArgs = props.arguments.domain;
-
   const [state, setState] = useState<State>({
       domains: undefined,
       error: "",
       forwardingEmail: "",
       isRequireUpgrade: false,
       isDomainsLoading: false,
+      aliasSubmitLoading: false,
     }),
+    domainFromArgs = props.arguments?.domain,
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
     DEFAULT_DOMAIN = getPreferenceValues<Preferences>().default_domain || domainFromArgs,
     API_URL = "https://api.improvmx.com/v3/";
@@ -121,9 +122,11 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
 
   const handleMaskedEmail = async (domain: Domain) => {
     if (domain.banned || domain.active == false) {
-      showToast(Toast.Style.Failure, "Invalid Domain", "Domain not configured properly");
+      showToast(Toast.Style.Failure, "Domain not configured properly");
       return;
     }
+
+    state.aliasSubmitLoading = true;
 
     const form = new FormData();
     form.append("alias", Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
@@ -143,6 +146,8 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
           setState((prevState) => {
             return { ...prevState, error: "Invalid API Token" };
           });
+
+          state.aliasSubmitLoading = false;
 
           return;
         }
@@ -179,8 +184,14 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
       await popToRoot({
         clearSearchBar: true,
       });
+
+      state.aliasSubmitLoading = false;
     } catch (error) {
-      console.log(error);
+      setState((prevState) => {
+        return { ...prevState, error: "Failed to create masked email. Please try again later." };
+      });
+
+      state.aliasSubmitLoading = false;
     }
   };
 
@@ -217,12 +228,8 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
 
   return DEFAULT_DOMAIN ? (
     <Detail
-      markdown={`We are using your domain [${DEFAULT_DOMAIN}](${DEFAULT_DOMAIN}) to create masked email. You can change your default domain in your Extension Preferences.`}
-      actions={
-        <ActionPanel>
-          <Action title="Open Extension Preferences" onAction={openCommandPreferences} />
-        </ActionPanel>
-      }
+      isLoading={state.isDomainsLoading}
+      // markdown={`We are using your domain [${DEFAULT_DOMAIN}](${DEFAULT_DOMAIN}) to create masked email. You can change your default domain in your Extension Preferences.`}
     />
   ) : state.error ? (
     <Detail

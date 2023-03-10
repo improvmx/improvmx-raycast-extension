@@ -130,7 +130,7 @@ export default function CreateMaskedEmail() {
 
   const showAliases = async (domain: Domain) => {
     if (domain.banned || domain.active == false) {
-      showToast(Toast.Style.Failure, "Invalid Domain", "Domain not configured properly");
+      showToast(Toast.Style.Failure, "Domain not configured properly");
       return;
     }
 
