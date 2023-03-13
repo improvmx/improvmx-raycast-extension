@@ -252,7 +252,11 @@ export default function CreateMaskedEmail() {
                   <Action
                     title="Create new alias"
                     onAction={async () => {
-                      await launchCommand({ name: "create-alias", type: LaunchType.UserInitiated });
+                      await launchCommand({ name: "create-alias", type: LaunchType.UserInitiated, 
+                      arguments: {
+                        domain: state.selectedDomain
+                      }
+                    });
                     }}
                   />
                 </ActionPanel>

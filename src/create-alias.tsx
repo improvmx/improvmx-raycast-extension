@@ -8,6 +8,7 @@ import {
   Clipboard,
   Action,
   Form,
+  LaunchProps,
   popToRoot,
 } from "@raycast/api";
 import fetch from "node-fetch";
@@ -34,7 +35,14 @@ interface State {
   isRequireUpgrade: boolean;
 }
 
-export default function createAlias() {
+interface DomainArgs {
+  domain: string;
+}
+
+export default function createAlias(props: LaunchProps<{ arguments: DomainArgs }>) {
+
+  const propDomain = props.arguments.domain;
+
   const [state, setState] = useState<State>({
       domains: undefined,
       error: "",
@@ -223,7 +231,8 @@ export default function createAlias() {
         </ActionPanel>
       }
     >
-      <Form.Dropdown id="domain" title="Domain" placeholder="Select a domain" error={state.domainError}>
+      <Form.Dropdown id="domain" title="Domain" placeholder="Select a domain" defaultValue={propDomain}
+       error={state.domainError}>
         {state.domains
           ?.filter((domain) => !domain.banned && domain.active)
           .map((domain) => (
