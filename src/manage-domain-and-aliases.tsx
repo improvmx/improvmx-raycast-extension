@@ -92,8 +92,71 @@ export default function CreateMaskedEmail() {
         const response = (await apiResponse.json()) as unknown;
         const domains = response as { domains: Array<Domain> };
 
+        const dummyDomains = [
+          {
+            display: "piedpiper.com",
+            banned: false,
+            active: true,
+            aliases: [
+              {
+                forward: "richard.hendricks@gmail.com",
+                alias: "*",
+                id: 1,
+              },
+              {
+                forward: "richard.hendricks@gmail.com",
+                alias: "richard",
+                id: 2,
+              },
+              {
+                forward: "jdunn@outlook.com",
+                alias: "jared",
+                id: 3,
+              },
+              {
+                forward: "dinesh.chugtai@live.com",
+                alias: "dinesh",
+                id: 4,
+              },
+              {
+                forward: "gilfoyle@protonmail.com",
+                alias: "gilfoyle",
+                id: 5,
+              },
+            ],
+          },
+          {
+            display: "nothotdog.com",
+            banned: false,
+            active: true,
+            aliases: [
+              {
+                forward: "*",
+                alias: "*",
+                id: 1,
+              },
+              {
+                forward: "*",
+                alias: "*",
+                id: 2,
+              },
+              {
+                forward: "*",
+                alias: "*",
+                id: 3,
+              },
+            ],
+          },
+          {
+            display: "hooli.org",
+            banned: false,
+            active: false,
+            aliases: [],
+          },
+        ];
+
         setState((prevState) => {
-          return { ...prevState, domains: domains.domains, error: "", isDomainsLoading: false };
+          return { ...prevState, domains: dummyDomains, error: "", isDomainsLoading: false };
         });
       } catch (error) {
         (state.error =
@@ -132,30 +195,39 @@ export default function CreateMaskedEmail() {
       return { ...prevState, aliasView: true, selectedDomain: domain.display };
     });
 
-    try {
-      const apiResponse = await fetch(API_URL + "domains/" + domain.display + "/aliases/", {
-        headers: {
-          Authorization: "Basic " + auth,
-          "Content-Type": "application/json",
+    const dummyAliases = {
+      aliases: [
+        {
+          forward: "richard.hendricks@gmail.com",
+          alias: "*",
+          id: 1,
         },
-      });
+        {
+          forward: "richard.hendricks@gmail.com",
+          alias: "richard",
+          id: 2,
+        },
+        {
+          forward: "jdunn@outlook.com",
+          alias: "jared",
+          id: 3,
+        },
+        {
+          forward: "dinesh.chugtai@live.com",
+          alias: "dinesh",
+          id: 4,
+        },
+        {
+          forward: "gilfoyle@protonmail.com",
+          alias: "gilfoyle",
+          id: 5,
+        },
+      ],
+    };
 
-      if (!apiResponse.ok) {
-        setState((prevState) => {
-          return { ...prevState, error: "Failed to fetch aliases. Please try again later." };
-        });
-        return;
-      }
-
-      const response = (await apiResponse.json()) as unknown;
-      const aliases = response as { aliases: Array<Alias> };
-
-      setState((prevState) => {
-        return { ...prevState, aliases: aliases.aliases, error: "" };
-      });
-    } catch (error) {
-      console.log(error);
-    }
+    setState((prevState) => {
+      return { ...prevState, aliases: dummyAliases.aliases, error: "" };
+    });
   };
 
   showError();

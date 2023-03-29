@@ -58,6 +58,16 @@ export default function AddDomain() {
         return { ...prevState, isLoading: true };
       });
 
+      await showToast(Toast.Style.Success, "Domain Added", "Domain added successfully to your ImprovMX account.");
+      setDomain("");
+      popToRoot({ clearSearchBar: true });
+
+      setState((prevState) => {
+        return { ...prevState, isLoading: false };
+      });
+
+      return;
+
       try {
         const apiResponse = await fetch(API_URL + "domains", {
           method: "POST",

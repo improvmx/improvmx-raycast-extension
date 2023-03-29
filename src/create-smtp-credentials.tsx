@@ -94,8 +94,71 @@ export default function createSMTPCredentials() {
         const response = (await apiResponse.json()) as unknown;
         const domains = response as { domains: Array<Domain> };
 
+        const dummyDomains = [
+          {
+            display: "piedpiper.com",
+            banned: false,
+            active: true,
+            aliases: [
+              {
+                forward: "richard.hendricks@gmail.com",
+                alias: "*",
+                id: 1,
+              },
+              {
+                forward: "richard.hendricks@gmail.com",
+                alias: "richard",
+                id: 2,
+              },
+              {
+                forward: "jdunn@outlook.com",
+                alias: "jared",
+                id: 3,
+              },
+              {
+                forward: "dinesh.chugtai@live.com",
+                alias: "dinesh",
+                id: 4,
+              },
+              {
+                forward: "gilfoyle@protonmail.com",
+                alias: "gilfoyle",
+                id: 5,
+              },
+            ],
+          },
+          {
+            display: "nothotdog.com",
+            banned: false,
+            active: true,
+            aliases: [
+              {
+                forward: "*",
+                alias: "*",
+                id: 1,
+              },
+              {
+                forward: "*",
+                alias: "*",
+                id: 2,
+              },
+              {
+                forward: "*",
+                alias: "*",
+                id: 3,
+              },
+            ],
+          },
+          {
+            display: "hooli.org",
+            banned: false,
+            active: false,
+            aliases: [],
+          },
+        ];
+
         setState((prevState) => {
-          return { ...prevState, domains: domains.domains, error: "" };
+          return { ...prevState, domains: dummyDomains, error: "" };
         });
       } catch (error) {
         setState((prevState) => {
@@ -154,6 +217,20 @@ export default function createSMTPCredentials() {
       password: password,
       is_limited: onlyFromAlias,
     };
+
+    await Clipboard.copy(password);
+    await showToast(Toast.Style.Success, "SMTP Credentials Created", "Password copied to clipboard");
+    await popToRoot({
+      clearSearchBar: true,
+    });
+    setState((prevState) => {
+      return {
+        ...prevState,
+        isLoading: false,
+      };
+    });
+
+    return;
 
     try {
       const apiResponse = await fetch(API_URL + "domains/" + domain + "/credentials", {

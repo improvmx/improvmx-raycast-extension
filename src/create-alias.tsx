@@ -30,7 +30,7 @@ interface State {
   forwardingEmail?: string;
   aliasError?: string;
   domainError?: string;
-  isLoading: false;
+  isLoading: boolean;
   forwardingEmailError: string;
   isRequireUpgrade: boolean;
   defaultValue: string;
@@ -82,8 +82,71 @@ export default function createAlias(props: LaunchProps<{ arguments: DomainArgs }
         const response = (await apiResponse.json()) as unknown;
         const domains = response as { domains: Array<Domain> };
 
+        const dummyDomains = [
+          {
+            display: "piedpiper.com",
+            banned: false,
+            active: true,
+            aliases: [
+              {
+                forward: "richard.hendricks@gmail.com",
+                alias: "*",
+                id: 1,
+              },
+              {
+                forward: "richard.hendricks@gmail.com",
+                alias: "richard",
+                id: 2,
+              },
+              {
+                forward: "jdunn@outlook.com",
+                alias: "jared",
+                id: 3,
+              },
+              {
+                forward: "dinesh.chugtai@live.com",
+                alias: "dinesh",
+                id: 4,
+              },
+              {
+                forward: "gilfoyle@protonmail.com",
+                alias: "gilfoyle",
+                id: 5,
+              },
+            ],
+          },
+          {
+            display: "nothotdog.com",
+            banned: false,
+            active: true,
+            aliases: [
+              {
+                forward: "*",
+                alias: "*",
+                id: 1,
+              },
+              {
+                forward: "*",
+                alias: "*",
+                id: 2,
+              },
+              {
+                forward: "*",
+                alias: "*",
+                id: 3,
+              },
+            ],
+          },
+          {
+            display: "hooli.org",
+            banned: false,
+            active: false,
+            aliases: [],
+          },
+        ];
+
         setState((prevState) => {
-          return { ...prevState, domains: domains.domains, error: "", defaultValue: propDomain };
+          return { ...prevState, domains: dummyDomains, error: "", defaultValue: propDomain };
         });
       } catch (error) {
         setState((prevState) => {
@@ -117,10 +180,25 @@ export default function createAlias(props: LaunchProps<{ arguments: DomainArgs }
   };
 
   const handleSumbit = async (values: any) => {
+    setState((prevState) => {
+      return { ...prevState, isLoading: true };
+    });
     const { domain, alias } = values;
     const aliasError = alias.length === 0 ? "Alias is required" : "";
     const domainError = !domain ? "Domain is required" : "";
     const forwardingEmailError = state.forwardingEmail?.length === 0 ? "Forwarding Email is required" : "";
+
+    showToast(Toast.Style.Success, "Alias created", "Alias created and copied to clipboard " + alias + "@" + domain);
+    Clipboard.copy(alias + "@" + domain);
+    popToRoot({
+      clearSearchBar: true,
+    });
+
+    setState((prevState) => {
+      return { ...prevState, isLoading: false };
+    });
+
+    return;
 
     if (aliasError || domainError || forwardingEmailError) {
       setState((prevState) => {
@@ -193,7 +271,7 @@ export default function createAlias(props: LaunchProps<{ arguments: DomainArgs }
     });
     await showToast(
       Toast.Style.Success,
-      "Aias created",
+      "Alias created",
       "Alias created and copied to clipboard " + alias + "@" + domain
     );
     await Clipboard.copy(alias + "@" + domain);
@@ -256,7 +334,7 @@ export default function createAlias(props: LaunchProps<{ arguments: DomainArgs }
         id="forwardingEmail"
         title="Forwarding Email"
         placeholder="Enter a forwarding email"
-        value={state.forwardingEmail}
+        value="richard.hendricks@gmail.com"
         error={state.forwardingEmailError}
         onChange={(value) => setState({ ...state, forwardingEmail: value })}
       />

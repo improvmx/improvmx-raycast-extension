@@ -58,9 +58,9 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
       isDomainsLoading: false,
       aliasSubmitLoading: false,
     }),
-    domainFromArgs = props.arguments?.domain,
+    domainFromArgs = "piedpiper.com",
     API_TOKEN = getPreferenceValues<Preferences>().api_token,
-    DEFAULT_DOMAIN = getPreferenceValues<Preferences>().default_domain || domainFromArgs,
+    DEFAULT_DOMAIN = "piedpiper.com" || domainFromArgs,
     API_URL = "https://api.improvmx.com/v3/";
 
   const auth = Buffer.from("api:" + API_TOKEN).toString("base64");
@@ -127,6 +127,33 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
     }
 
     state.aliasSubmitLoading = true;
+
+    await Clipboard.copy(
+      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "@" + domain.display
+    );
+
+    await showHUD(
+      "Masked email created successfully " +
+        Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15) +
+        "@" +
+        domain.display +
+        " and copied to clipboard"
+    );
+
+    await showToast(
+      Toast.Style.Success,
+      "Masked email created successfully",
+      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "@" + domain.display
+    );
+
+    await popToRoot({
+      clearSearchBar: true,
+    });
+
+    state.aliasSubmitLoading = false;
+
+    return;
 
     const form = new FormData();
     form.append("alias", Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
@@ -203,16 +230,23 @@ export default function CreateMaskedEmail(props: LaunchProps<{ arguments: Domain
       state.forwardingEmail !== undefined &&
       state.forwardingEmail !== ""
     ) {
-      const domain = state.domains?.find((domain) => domain.display === DEFAULT_DOMAIN);
-      if (domain) {
-        await handleMaskedEmail(domain);
-      } else {
-        showToast(
-          Toast.Style.Failure,
-          "Invalid Domain",
-          "Your default domain is invalid. Please update it from this command preferences"
-        );
-      }
+      // const domain = state.domains?.find((domain) => domain.display === DEFAULT_DOMAIN);
+      // if (domain) {
+
+      const DomainToPass = {
+        display: "piedpiper.com",
+        active: true,
+        banned: false,
+        aliases: [],
+      };
+      await handleMaskedEmail(DomainToPass);
+      // } else {
+      // showToast(
+      // Toast.Style.Failure,
+      // "Invalid Domain",
+      // "Your default domain is invalid. Please update it from this command preferences"
+      // );
+      // }
     }
   };
 
